@@ -98,10 +98,16 @@ async function polish(modelId, fragment) {
 export async function generate(modelId, changes) {
   const { changePart, reasonPart, testingClauses } = splitInput(changes);
 
-  const summaryBullets = [await polish(modelId, changePart)];
+  // Polish changePart once and reuse it for both Summary and Changes —
+  // calling polish() separately for each (as this originally did) doubled
+  // the inference cost and, since generation isn't deterministic, could
+  // produce two subtly different wordings of the same change.
+  const changeBullet = await polish(modelId, changePart);
+
+  const summaryBullets = [changeBullet];
   if (reasonPart) summaryBullets.push(`Motivation: ${await polish(modelId, reasonPart)}`);
 
-  const changeBullets = [await polish(modelId, changePart)];
+  const changeBullets = [changeBullet];
 
   const testingBullets =
     testingClauses.length > 0
