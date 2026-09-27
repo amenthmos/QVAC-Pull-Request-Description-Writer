@@ -11,6 +11,27 @@ npm start
 
 Then open http://localhost:32009
 
+## Example
+
+Input:
+
+> added rate limiting to the login endpoint to prevent brute force attacks, tested with a script that sends 100 requests per second
+
+Output:
+
+```
+## Summary
+- Added rate limiting to the login endpoint to prevent brute force attacks.
+
+## Changes
+- Added rate limiting to the login endpoint to prevent brute force attacks.
+
+## Testing
+- Tested with a script that sends 100 requests per second.
+```
+
+The description is split deterministically into a change part, an optional "because ..." motivation, and any testing-related clause, so the Testing section reflects only what was actually described instead of the model guessing or denying that testing happened.
+
 ## QVAC SDK version
 
 `@qvac/sdk` ^0.19.0 (see `package.json`).
