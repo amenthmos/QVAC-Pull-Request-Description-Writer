@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>QVAC Pull Request Description Writer</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: linear-gradient(160deg, #eff4ff 0%, #dbe7ff 100%);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    color: #1f2430;
+    display: flex;
+    justify-content: center;
+    padding: 46px 20px;
+  }
+  .wrap { width: 100%; max-width: 540px; text-align: center; }
+  .icon { font-size: 2rem; margin-bottom: 4px; }
+  h1 { font-size: 1.5rem; margin: 0 0 6px; color: #1d4ed8; font-weight: 800; }
+  .subtitle { color: #5b6472; margin-bottom: 24px; font-size: 0.9rem; line-height: 1.4; }
+  .card {
+    background: #ffffff;
+    border: 1px solid rgba(0,0,0,0.06);
+    border-radius: 18px;
+    padding: 30px 26px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+  }
+  input[type=text], textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1.5px solid #d8dce3;
+    background: #fafbfc;
+    color: #1f2430;
+    font-family: inherit;
+    font-size: 0.98rem;
+    margin-bottom: 16px;
+    resize: vertical;
+  }
+  input[type=text]:focus, textarea:focus {
+    outline: none;
+    border-color: #2563eb;
+    background: #fff;
+  }
+  label.field-label { display:block; text-align:left; font-size: 0.82rem; font-weight: 600; color: #4a5160; margin-bottom: 8px; }
+  button.action {
+    padding: 12px 28px;
+    border: none;
+    border-radius: 999px;
+    font-size: 1rem;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    background: #2563eb;
+    color: #fff;
+    box-shadow: 0 5px 0 #1d4ed8;
+  }
+  button.action:active { transform: translateY(3px); box-shadow: 0 2px 0 #1d4ed8; }
+  button.action:disabled { opacity: 0.4; cursor: not-allowed; }
+  .status { margin-top: 14px; font-size: 0.85rem; color: #6b7280; min-height: 1.2em; }
+  .result-card {
+    margin-top: 20px;
+    text-align: left;
+    background: #eff4ff;
+    border-radius: 14px;
+    padding: 18px 18px;
+    border: 1px solid rgba(0,0,0,0.05);
+  }
+  .result-label { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #1d4ed8; margin-bottom: 8px; }
+  .result-body { font-size: 1rem; line-height: 1.65; color: #1f2430; white-space: pre-wrap; word-break: break-word; }
+  .footer-note { color: #8a92a0; font-size: 0.78rem; margin-top: 20px; }
+  .spinner {
+    display: inline-block;
+    width: 13px; height: 13px;
+    border: 2px solid #dbe7ff;
+    border-top-color: #2563eb;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    vertical-align: middle;
+    margin-right: 8px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="icon">🔀</div>
+    <h1>QVAC Pull Request Description Writer</h1>
+    <p class="subtitle">Describe the changes you made and why, and an on-device AI writes a structured PR description with Summary, Changes, and Testing sections. No cloud call, no API key.</p>
+
+    <div class="card">
+      <label class="field-label" for="mainInput">Describe your changes and why you made them</label>
+      <textarea id="mainInput" rows="5" placeholder="e.g. refactored the payment module to use async/await instead of callbacks, because the old code was hard to debug and had race conditions"></textarea>
+      <button class="action" id="generateBtn">Write PR Description</button>
+      <div class="status" id="status"></div>
+      <div id="resultBox"></div>
+    </div>
+
+    <p class="footer-note">Everything runs locally on your machine. No text ever leaves this device.</p>
+  </div>
+
+  <script>
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    const mainInput = document.getElementById('mainInput');
+    const generateBtn = document.getElementById('generateBtn');
+    const status = document.getElementById('status');
+    const resultBox = document.getElementById('resultBox');
+
+    async function generate() {
+      const value = mainInput.value.trim();
+      if (!value) return;
+      generateBtn.disabled = true;
+      resultBox.innerHTML = '';
+      status.innerHTML = '<span class="spinner"></span>Structuring the description...';
+
+      try {
+        const res = await fetch('/api/pr-description', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ changes: value }),
+        });
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+
+        status.textContent = '';
+        resultBox.innerHTML = `
+          <div class="result-card">
+            <div class="result-label">PR Description</div>
+            <div class="result-body">${escapeHtml(data.result)}</div>
+          </div>
+        `;
+      } catch (err) {
+        status.textContent = 'Error: ' + err.message;
+      } finally {
+        generateBtn.disabled = false;
+      }
+    }
+
+    generateBtn.addEventListener('click', generate);
+    mainInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey && 'true' !== 'true') generate();
+      if (e.key === 'Enter' && e.ctrlKey) generate();
+    });
+  </script>
+</body>
+</html>

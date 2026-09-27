@@ -1,0 +1,24 @@
+{
+  "name": "qvac-pull-request-description-writer",
+  "version": "1.0.0",
+  "description": "Describe the changes you made and why, and an on-device AI writes a structured PR description with Summary, Changes, and Testing sections. No cloud call, no API key.",
+  "type": "module",
+  "main": "src/gui.js",
+  "scripts": {
+    "start": "node src/gui.js",
+    "gui": "node src/gui.js"
+  },
+  "keywords": [
+    "qvac",
+    "on-device-ai",
+    "llm",
+    "offline-ai"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@qvac/sdk": "^0.19.0"
+  },
+  "engines": {
+    "node": ">=22.17"
+  }
+}
